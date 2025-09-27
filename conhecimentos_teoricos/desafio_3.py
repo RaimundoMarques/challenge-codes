@@ -1,4 +1,4 @@
-# Desafio 3 - Ordenação de arrays
+# Desafio 3 - Fibonacci
 # 3. Dado um número N inteiro, escreva um algoritmo que descreva os N números da sequência de Fibonacci.
 
 # Obs:A soma do próximo termo é igual ao termo anterior
