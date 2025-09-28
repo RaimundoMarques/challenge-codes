@@ -18,9 +18,9 @@ services:
 
 
 
-  backend:
+  api:
     build: ./backend
-    container_name: backend
+    container_name: api
     restart: always
     env_file:
       - .env

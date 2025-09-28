@@ -1,7 +1,10 @@
 from fastapi import FastAPI
-from .models import database
+from .routers import users
 
 app = FastAPI()
+
+# Rotas
+app.include_router(users.router)
 
 @app.get("/")
 def root():
