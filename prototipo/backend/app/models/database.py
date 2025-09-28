@@ -3,8 +3,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 DB_USER = os.getenv("DB_USER", "admin")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "admin123")
-DB_NAME = os.getenv("DB_NAME", "ordens_servico")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+DB_NAME = os.getenv("DB_NAME", "postgres")
 DB_HOST = os.getenv("DB_HOST", "db-postgres")  # nome do serviço no docker-compose
 DB_PORT = os.getenv("DB_PORT", "5432")
 
