@@ -5,6 +5,7 @@ import Orders from '../views/Orders.vue'
 import Login from '../components/Login.vue'
 import AddUser from '../components/AddUser.vue'
 import AddOrder from '../components/AddOrder.vue'
+import OrderDetail from '../views/OrderDetail.vue'
 import store from '../store'
 
 const routes = [
@@ -42,6 +43,12 @@ const routes = [
     path: '/orders/add',
     name: 'AddOrder',
     component: AddOrder,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/orders/:id',
+    name: 'OrderDetail',
+    component: OrderDetail,
     meta: { requiresAuth: true }
   }
 ]

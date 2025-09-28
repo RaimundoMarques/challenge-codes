@@ -37,6 +37,7 @@ service_orders_table = Table(
     Column("user_id", Integer, ForeignKey("users.id"), nullable=False),
     Column("title", String(150), nullable=False),
     Column("description", Text),
+    Column("activities_description", Text),  # Descrição das atividades realizadas
     Column("status", String(20), default="open"),
     Column("created_at", TIMESTAMP, default=func.current_timestamp()),
     Column("updated_at", TIMESTAMP, default=func.current_timestamp())
