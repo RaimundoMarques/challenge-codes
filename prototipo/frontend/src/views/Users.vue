@@ -2,7 +2,10 @@
   <div class="users">
     <div class="header">
       <h1>👥 Gestão de Usuários</h1>
-      <button @click="loadUsers" class="btn btn-primary">Atualizar</button>
+      <div class="header-actions">
+        <router-link to="/users/add" class="btn btn-success">+ Adicionar Usuário</router-link>
+        <button @click="loadUsers" class="btn btn-primary">Atualizar</button>
+      </div>
     </div>
     
     <div v-if="loading" class="loading">
@@ -39,6 +42,7 @@
 
 <script>
 import axios from 'axios'
+import { mapState } from 'vuex'
 
 export default {
   name: 'Users',
@@ -48,6 +52,9 @@ export default {
       loading: false,
       error: null
     }
+  },
+  computed: {
+    ...mapState('auth', ['user'])
   },
   mounted() {
     this.loadUsers()
@@ -61,7 +68,7 @@ export default {
         const response = await axios.get('http://localhost:8000/users/')
         this.users = response.data
       } catch (error) {
-        this.error = error.message
+        this.error = error.response?.data?.detail || error.message
         console.error('Erro ao carregar usuários:', error)
       } finally {
         this.loading = false
@@ -93,6 +100,12 @@ export default {
   color: #333;
 }
 
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .btn {
   padding: 0.5rem 1rem;
   border: none;
@@ -104,6 +117,12 @@ export default {
 .btn-primary {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  text-decoration: none;
 }
 
 .btn:hover {
