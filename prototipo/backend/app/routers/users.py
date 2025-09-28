@@ -1,45 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..models.database import SessionLocal
-from pydantic import BaseModel
+from ..models.auth import users_table
+from ..models.auth_models import UserBase, UserCreate, UserRead
+from ..middleware.auth import get_current_active_user, require_admin
+from ..utils.security import get_password_hash
 from typing import List
-from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData, Text, TIMESTAMP
-from sqlalchemy.sql import func
 
 router = APIRouter(
     prefix="/users",
     tags=["users"]
-)
-
-class UserBase(BaseModel):
-    username: str
-    name: str | None = None
-    email: str | None = None
-
-class UserCreate(UserBase):
-    password: str
-
-class UserRead(UserBase):
-    id: int
-    is_active: bool = True
-    created_at: str | None = None
-
-    class Config:
-        from_attributes = True  # FastAPI v2
-
-# Definir metadata corretamente
-metadata = MetaData()
-
-users_table = Table(
-    "users",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("username", String(50), unique=True, nullable=False),
-    Column("password_hash", Text, nullable=False),
-    Column("name", String(100)),
-    Column("email", String(100), unique=True),
-    Column("is_active", Boolean, default=True),
-    Column("created_at", TIMESTAMP, default=func.current_timestamp())
 )
 
 # Dependência para obter a sessão
@@ -50,12 +20,16 @@ def get_db():
     finally:
         db.close()
 
-# Rotas
+# Rotas protegidas
 @router.get("/", response_model=List[UserRead])
-def list_users(db: Session = Depends(get_db)):
-    """Lista todos os usuários"""
+def list_users(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Lista todos os usuários (requer autenticação)"""
     query = db.execute(users_table.select()).fetchall()
-
+    
+    # Converter tuplas para dicionários
     users = []
     for row in query:
         user_dict = {
@@ -63,16 +37,21 @@ def list_users(db: Session = Depends(get_db)):
             "username": row.username,
             "name": row.name,
             "email": row.email,
+            "role": row.role,
             "is_active": row.is_active,
-            "created_at": str(row.created_at) if row.created_at else None
+            "created_at": row.created_at
         }
         users.append(user_dict)
     
     return users
 
 @router.get("/{user_id}", response_model=UserRead)
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    """Busca um usuário por ID"""
+def get_user(
+    user_id: int, 
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Busca um usuário por ID (requer autenticação)"""
     query = db.execute(
         users_table.select().where(users_table.c.id == user_id)
     ).first()
@@ -85,13 +64,18 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         "username": query.username,
         "name": query.name,
         "email": query.email,
+        "role": query.role,
         "is_active": query.is_active,
-        "created_at": str(query.created_at) if query.created_at else None
+        "created_at": query.created_at
     }
 
 @router.post("/", response_model=UserRead)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    """Cria um novo usuário"""
+def create_user(
+    user: UserCreate, 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin)  # Apenas admin pode criar usuários
+):
+    """Cria um novo usuário (requer privilégios de administrador)"""
     # Validações básicas
     if len(user.username) < 3:
         raise HTTPException(status_code=400, detail="Username deve ter pelo menos 3 caracteres")
@@ -99,17 +83,22 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if user.email and "@" not in user.email:
         raise HTTPException(status_code=400, detail="Email inválido")
     
+    # Hash da senha
+    hashed_password = get_password_hash(user.password)
+    
     stmt = users_table.insert().values(
         username=user.username,
-        password_hash=user.password,
+        password_hash=hashed_password,
         name=user.name,
-        email=user.email
+        email=user.email,
+        role=user.role
     )
     
     try:
         result = db.execute(stmt)
         db.commit()
         
+        # Buscar o usuário criado
         new_user = db.execute(
             users_table.select().where(users_table.c.id == result.inserted_primary_key[0])
         ).first()
@@ -119,8 +108,9 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
             "username": new_user.username,
             "name": new_user.name,
             "email": new_user.email,
+            "role": new_user.role,
             "is_active": new_user.is_active,
-            "created_at": str(new_user.created_at) if new_user.created_at else None
+            "created_at": new_user.created_at
         }
         
     except Exception as e:
@@ -130,8 +120,12 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=f"Erro ao criar usuário: {e}")
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db)):
-    """Desativa um usuário (soft delete)"""
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin)  # Apenas admin pode deletar usuários
+):
+    """Desativa um usuário (soft delete) - requer privilégios de administrador"""
     stmt = users_table.update().where(
         users_table.c.id == user_id
     ).values(is_active=False)
