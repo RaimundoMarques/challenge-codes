@@ -17,7 +17,7 @@
     <div class="filter-group">
       <label for="user-filter">Técnico:</label>
       <select 
-        id="user-filter" 
+        id="user-filter"
         v-model="localFilters.user_id" 
         @change="applyFilters"
       >
@@ -72,14 +72,16 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
   display: flex;
-  gap: 2rem;
-  align-items: end;
+  gap: 15rem;
 }
 
 .filter-group {
   display: flex;
-  flex-direction: column;
-  min-width: 200px;
+  flex-direction: row;
+  width: auto;
+  justify-content: space-around;
+  align-items: end;
+  width: 100%;
 }
 
 .filter-group label {
@@ -92,7 +94,7 @@ export default {
   padding: 0.5rem;
   border: 2px solid #e1e5e9;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1rem;  
 }
 
 .filter-group select:focus {
