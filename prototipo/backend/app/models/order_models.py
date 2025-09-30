@@ -19,6 +19,9 @@ class ClientRead(ClientBase):
     class Config:
         from_attributes = True
 
+
+
+
 # Modelos para Equipamentos
 class EquipmentBase(BaseModel):
     type: str
@@ -36,6 +39,9 @@ class EquipmentRead(EquipmentBase):
 
     class Config:
         from_attributes = True
+
+
+
 
 # Modelos para Ordens de Serviço
 class ServiceOrderBase(BaseModel):
@@ -66,9 +72,14 @@ class ServiceOrderRead(ServiceOrderBase):
     client: Optional[ClientRead] = None
     equipment: Optional[EquipmentRead] = None
     user: Optional[dict] = None  # UserRead
+    photos: Optional[List['PhotoRead']] = None
 
     class Config:
         from_attributes = True
+
+
+
+
 
 # Modelos para Checklists
 class ChecklistItemBase(BaseModel):
@@ -97,6 +108,11 @@ class ChecklistRead(ChecklistBase):
     class Config:
         from_attributes = True
 
+
+
+
+
+
 # Modelos para Respostas de Checklist
 class ChecklistResponseBase(BaseModel):
     is_checked: bool
@@ -114,6 +130,11 @@ class ChecklistResponseRead(ChecklistResponseBase):
 
     class Config:
         from_attributes = True
+
+
+
+
+
 
 # Modelos para Fotos
 class PhotoBase(BaseModel):

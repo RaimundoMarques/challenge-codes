@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from typing import List, Optional
 from datetime import datetime
+import os
+import uuid
+import shutil
 
 from ..models.database import SessionLocal
 from ..models.orders import (
@@ -23,7 +26,9 @@ from ..models.order_models import (
     ChecklistRead, 
     ChecklistItemCreate, 
     ChecklistItemRead,
-    ChecklistResponseCreate
+    ChecklistResponseCreate,
+    PhotoCreate,
+    PhotoRead
 )
 from ..middleware.auth import get_current_active_user
 
@@ -39,6 +44,10 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+
+
 
 # ===== ORDENS DE SERVIÇO =====
 
@@ -149,10 +158,17 @@ def get_order(
         select(users_table).where(users_table.c.id == order.user_id)
     ).first()
     
+    # Buscar fotos da ordem
+    photos = db.execute(
+        select(os_photos_table).where(os_photos_table.c.service_order_id == order_id)
+        .order_by(os_photos_table.c.uploaded_at.desc())
+    ).fetchall()
+    
     return {
         "id": order.id,
         "title": order.title,
         "description": order.description,
+        "activities_description": order.activities_description,
         "status": order.status,
         "client_id": order.client_id,
         "equipment_id": order.equipment_id,
@@ -184,7 +200,16 @@ def get_order(
             "role": user.role,
             "is_active": user.is_active,
             "created_at": user.created_at
-        } if user else None
+        } if user else None,
+        "photos": [
+            {
+                "id": photo.id,
+                "service_order_id": photo.service_order_id,
+                "photo_url": photo.photo_url,
+                "uploaded_at": photo.uploaded_at
+            }
+            for photo in photos
+        ]
     }
 
 @router.post("/", response_model=ServiceOrderRead)
@@ -474,6 +499,9 @@ def delete_order(
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Erro ao excluir ordem de serviço: {e}")
 
+
+
+
 # ===== TÉCNICOS =====
 
 @router.get("/technicians/")
@@ -497,6 +525,9 @@ def list_technicians(
         }
         for tech in technicians
     ]
+
+
+
 
 # ===== CLIENTES =====
 
@@ -554,6 +585,10 @@ def create_client(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Erro ao criar cliente: {e}")
+
+
+
+
 
 # ===== EQUIPAMENTOS =====
 
@@ -630,6 +665,10 @@ def create_equipment(
         if "unique" in str(e).lower():
             raise HTTPException(status_code=400, detail="Número de série já existe")
         raise HTTPException(status_code=400, detail=f"Erro ao criar equipamento: {e}")
+
+
+
+
 
 # ===== CHECKLISTS =====
 
@@ -730,6 +769,10 @@ def create_checklist_item(
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Erro ao criar item do checklist: {e}")
 
+
+
+
+
 # ===== RESPOSTAS DE CHECKLIST =====
 
 @router.get("/{order_id}/checklist-responses/")
@@ -810,3 +853,171 @@ def save_checklist_responses(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Erro ao salvar respostas: {e}")
+
+
+# =========================================
+# Endpoints para Fotos
+# =========================================
+
+# Configuração do diretório de upload
+UPLOAD_DIR = "/code/uploads"
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+def ensure_upload_dir():
+    """Garante que o diretório de upload existe"""
+    if not os.path.exists(UPLOAD_DIR):
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def is_allowed_file(filename: str) -> bool:
+    """Verifica se o arquivo tem uma extensão permitida"""
+    return any(filename.lower().endswith(ext) for ext in ALLOWED_EXTENSIONS)
+
+@router.post("/{order_id}/photos", response_model=PhotoRead)
+async def upload_photo(
+    order_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Upload de uma foto para uma ordem de serviço"""
+    # Verificar se ordem existe
+    order = db.execute(
+        select(service_orders_table).where(service_orders_table.c.id == order_id)
+    ).first()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Ordem de serviço não encontrada")
+    
+    # Verificar se é um arquivo de imagem
+    if not is_allowed_file(file.filename):
+        raise HTTPException(
+            status_code=400, 
+            detail="Formato de arquivo não permitido. Use: jpg, jpeg, png, gif, bmp, webp"
+        )
+    
+    # Verificar tamanho do arquivo
+    file_content = await file.read()
+    if len(file_content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Arquivo muito grande. Tamanho máximo: {MAX_FILE_SIZE // (1024*1024)}MB"
+        )
+    
+    try:
+        # Garantir que o diretório existe
+        ensure_upload_dir()
+        
+        # Gerar nome único para o arquivo
+        file_extension = os.path.splitext(file.filename)[1].lower()
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        file_path = os.path.join(UPLOAD_DIR, unique_filename)
+        
+        # Salvar arquivo
+        with open(file_path, "wb") as buffer:
+            buffer.write(file_content)
+        
+        # Salvar referência no banco
+        photo_url = f"/uploads/{unique_filename}"
+        stmt = os_photos_table.insert().values(
+            service_order_id=order_id,
+            photo_url=photo_url
+        )
+        result = db.execute(stmt)
+        db.commit()
+        
+        # Buscar foto criada
+        photo = db.execute(
+            select(os_photos_table).where(os_photos_table.c.id == result.inserted_primary_key[0])
+        ).first()
+        
+        return {
+            "id": photo.id,
+            "service_order_id": photo.service_order_id,
+            "photo_url": photo.photo_url,
+            "uploaded_at": photo.uploaded_at
+        }
+        
+    except Exception as e:
+        # Se houver erro, remover arquivo se foi criado
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer upload: {str(e)}")
+
+@router.get("/{order_id}/photos", response_model=List[PhotoRead])
+def get_order_photos(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Lista todas as fotos de uma ordem de serviço"""
+    # Verificar se ordem existe
+    order = db.execute(
+        select(service_orders_table).where(service_orders_table.c.id == order_id)
+    ).first()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Ordem de serviço não encontrada")
+    
+    # Buscar fotos
+    photos = db.execute(
+        select(os_photos_table).where(os_photos_table.c.service_order_id == order_id)
+        .order_by(os_photos_table.c.uploaded_at.desc())
+    ).fetchall()
+    
+    return [
+        {
+            "id": photo.id,
+            "service_order_id": photo.service_order_id,
+            "photo_url": photo.photo_url,
+            "uploaded_at": photo.uploaded_at
+        }
+        for photo in photos
+    ]
+
+@router.delete("/photos/{photo_id}")
+def delete_photo(
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Remove uma foto de uma ordem de serviço"""
+    # Buscar foto
+    photo = db.execute(
+        select(os_photos_table).where(os_photos_table.c.id == photo_id)
+    ).first()
+    
+    if not photo:
+        raise HTTPException(status_code=404, detail="Foto não encontrada")
+    
+    try:
+        # Remover arquivo do sistema
+        file_path = os.path.join(UPLOAD_DIR, os.path.basename(photo.photo_url))
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # Remover registro do banco
+        db.execute(os_photos_table.delete().where(os_photos_table.c.id == photo_id))
+        db.commit()
+        
+        return {"message": "Foto removida com sucesso"}
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao remover foto: {str(e)}")
+
+@router.get("/uploads/{filename}")
+async def serve_uploaded_file(filename: str):
+    """Serve arquivos de upload"""
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+    
+    # Verificar se é uma imagem
+    if not is_allowed_file(filename):
+        raise HTTPException(status_code=403, detail="Tipo de arquivo não permitido")
+    
+    from fastapi.responses import FileResponse
+    return FileResponse(file_path)

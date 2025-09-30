@@ -33,6 +33,8 @@ def get_db():
     finally:
         db.close()
 
+
+
 @router.post("/login", response_model=Token)
 def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     """Endpoint para fazer login"""
@@ -74,6 +76,8 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
         "user": user_data
     }
 
+
+
 @router.post("/logout")
 def logout(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -86,6 +90,8 @@ def logout(
     revoke_token(db, token)
     
     return {"message": "Logout realizado com sucesso"}
+
+
 
 @router.get("/me", response_model=UserRead)
 def get_current_user(
@@ -138,6 +144,8 @@ def get_current_user(
         "is_active": user.is_active,
         "created_at": user.created_at
     }
+
+
 
 @router.post("/verify-token")
 def verify_token_endpoint(
