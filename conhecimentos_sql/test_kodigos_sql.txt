@@ -1,0 +1,144 @@
+/* 1. Realize as criações das tabelas, definindo seus relacionamentos e chaves. */
+CREATE TABLE IF NOT EXISTS produto (
+    id SERIAL PRIMARY KEY,
+    descricao VARCHAR(100) NOT NULL,
+    unidade_medida VARCHAR(20) NOT NULL,
+    valor NUMERIC(10, 2) NOT NULL,
+    tam NUMERIC(10, 2) NOT NULL
+);
+
+select * from prodArmazem p ;
+select * from produto p;
+select * from armazem;
+/*
+	insert into produto (description, um, valor, tam)
+	values ('Produto cosmetico', 'Quantidade qualquer', 50.00, 2.00)
+*/
+-------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS armazem (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    espacoTotal NUMERIC(10, 2) NOT NULL
+);
+
+
+/*
+	insert into armazem (nome, espacoTotal)
+	values ('Jean Variedades', 50)
+*/
+
+	insert into armazem (nome, espacoTotal)
+	values ('RM Informática', 36)
+-------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS prodArmazem (
+    idProduto INT NOT NULL,
+    idArmazem INT NOT NULL,
+    qtd INT NOT NULL CHECK (qtd >= 0),
+
+    PRIMARY KEY (idProduto, idArmazem),
+
+    CONSTRAINT fk_produto FOREIGN KEY (idProduto) REFERENCES produto(id),
+    CONSTRAINT fk_armazem FOREIGN KEY (idArmazem) REFERENCES armazem(id)
+);
+
+/*
+	insert into prodArmazem (idProduto, idArmazem, qtd)
+	values (1, 1, 5)
+*/
+
+
+/* 2. Consultar todos os dados do armazém com o total ocupado */
+
+SELECT
+    A.nome AS "Armazem",
+    A.espacoTotal AS "Capacidade Total",
+    COALESCE(SUM(P.tam * E.qtd), 0) AS "Espaço Ocupado",
+    (A.espacoTotal - COALESCE(SUM(P.tam * E.qtd), 0)) AS "Espaço Disponível"
+FROM
+    armazem A
+LEFT JOIN
+    prodArmazem E ON A.id = E.idArmazem
+LEFT JOIN
+    produto P ON E.idProduto = P.id
+GROUP BY
+    A.id, A.nome, A.espacoTotal
+ORDER BY
+    "Espaço Ocupado" DESC;
+
+
+
+/* 3. Crie uma procedure que dado um produto como parâmetro, informe os 5 armazéns com maior quantidade desse produto */
+
+
+CREATE OR REPLACE FUNCTION prod5_armazem(p_idProduto INT)
+RETURNS TABLE (
+    armazem_id INT,
+    armazem_nome VARCHAR,
+    quantidade INT
+)
+LANGUAGE sql
+AS $$
+    SELECT 
+        a.id AS armazem_id,
+        a.nome AS armazem_nome,
+        p.qtd AS quantidade
+    FROM prodarmazem p
+    INNER JOIN armazem a ON p.idarmazem = a.id
+    WHERE p.idproduto = p_idProduto
+    ORDER BY p.qtd DESC
+    LIMIT 5;
+$$;
+
+-- Utilizando a função
+select *
+from prod5_armazem()
+
+
+
+ /* 4: Produtos que estão em mais armazéns (em quantidade de armazéns e não em acumulado) */
+
+SELECT
+    P.id AS "ID Produto",
+    P.descricao AS "Produto",
+    COUNT(E.idArmazem) AS "Quantidade de Armazéns"
+FROM
+    produto P
+JOIN
+    prodArmazem E ON P.id = E.idProduto
+GROUP BY
+    P.id, P.descricao
+ORDER BY
+    "Quantidade de Armazéns" DESC;
+
+
+
+
+/* 5. Produtos sem armazém alocado */
+
+SELECT
+    P.id AS "ID Produto",
+    P.descricao AS "Produto"
+FROM
+    produto P
+LEFT JOIN
+    prodArmazem E ON P.id = E.idProduto
+WHERE
+    E.idArmazem IS NULL;
+
+
+
+/* 6. Relatório: Lista de armazém com maior valor financeiro para empresa em ordem decrescente */
+SELECT
+    A.id AS "ID Armazém",
+    A.nome AS "Armazém",
+    SUM(P.valor * E.qtd) AS "Valor Financeiro Total"
+FROM
+    armazem A
+JOIN
+    prodArmazem E ON A.id = E.idArmazem
+JOIN
+    produto P ON E.idProduto = P.id
+GROUP BY
+    A.id, A.nome
+ORDER BY
+    "Valor Financeiro Total" DESC;
