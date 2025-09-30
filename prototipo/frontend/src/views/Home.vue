@@ -37,9 +37,9 @@ export default {
 </script>
 
 <style scoped>
-.home {
+/* .home {
   text-align: center;
-}
+} */
 
 .hero {
   margin-bottom: 3rem;

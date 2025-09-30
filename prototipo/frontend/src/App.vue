@@ -104,7 +104,7 @@ body {
 .user-info {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .user-name {
