@@ -22,7 +22,8 @@ from ..models.order_models import (
     ChecklistCreate, 
     ChecklistRead, 
     ChecklistItemCreate, 
-    ChecklistItemRead
+    ChecklistItemRead,
+    ChecklistResponseCreate
 )
 from ..middleware.auth import get_current_active_user
 
@@ -292,6 +293,8 @@ def update_order(
         update_data["title"] = order_update.title
     if order_update.description is not None:
         update_data["description"] = order_update.description
+    if order_update.activities_description is not None:
+        update_data["activities_description"] = order_update.activities_description
     if order_update.status is not None:
         update_data["status"] = order_update.status
     
@@ -627,3 +630,183 @@ def create_equipment(
         if "unique" in str(e).lower():
             raise HTTPException(status_code=400, detail="Número de série já existe")
         raise HTTPException(status_code=400, detail=f"Erro ao criar equipamento: {e}")
+
+# ===== CHECKLISTS =====
+
+@router.get("/checklists/", response_model=List[ChecklistRead])
+def list_checklists(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Lista todos os checklists"""
+    checklists = db.execute(select(checklists_table)).fetchall()
+    
+    result = []
+    for checklist in checklists:
+        # Buscar itens do checklist
+        items = db.execute(
+            select(checklist_items_table).where(checklist_items_table.c.checklist_id == checklist.id)
+        ).fetchall()
+        
+        checklist_data = {
+            "id": checklist.id,
+            "name": checklist.name,
+            "items": [
+                {
+                    "id": item.id,
+                    "description": item.description,
+                    "checklist_id": item.checklist_id
+                }
+                for item in items
+            ]
+        }
+        result.append(checklist_data)
+    
+    return result
+
+@router.post("/checklists/", response_model=ChecklistRead)
+def create_checklist(
+    checklist: ChecklistCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Cria um novo checklist (apenas admin)"""
+    stmt = checklists_table.insert().values(name=checklist.name)
+    
+    try:
+        result = db.execute(stmt)
+        db.commit()
+        
+        new_checklist = db.execute(
+            select(checklists_table).where(checklists_table.c.id == result.inserted_primary_key[0])
+        ).first()
+        
+        return {
+            "id": new_checklist.id,
+            "name": new_checklist.name,
+            "items": []
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao criar checklist: {e}")
+
+@router.post("/checklists/{checklist_id}/items/", response_model=ChecklistItemRead)
+def create_checklist_item(
+    checklist_id: int,
+    item: ChecklistItemCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Adiciona item a um checklist"""
+    # Verificar se checklist existe
+    checklist = db.execute(
+        select(checklists_table).where(checklists_table.c.id == checklist_id)
+    ).first()
+    
+    if not checklist:
+        raise HTTPException(status_code=404, detail="Checklist não encontrado")
+    
+    stmt = checklist_items_table.insert().values(
+        checklist_id=checklist_id,
+        description=item.description
+    )
+    
+    try:
+        result = db.execute(stmt)
+        db.commit()
+        
+        new_item = db.execute(
+            select(checklist_items_table).where(checklist_items_table.c.id == result.inserted_primary_key[0])
+        ).first()
+        
+        return {
+            "id": new_item.id,
+            "description": new_item.description,
+            "checklist_id": new_item.checklist_id
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao criar item do checklist: {e}")
+
+# ===== RESPOSTAS DE CHECKLIST =====
+
+@router.get("/{order_id}/checklist-responses/")
+def get_checklist_responses(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Busca respostas do checklist de uma ordem de serviço"""
+    responses = db.execute(
+        select(os_checklist_responses_table).where(
+            os_checklist_responses_table.c.service_order_id == order_id
+        )
+    ).fetchall()
+    
+    result = []
+    for response in responses:
+        # Buscar item do checklist
+        item = db.execute(
+            select(checklist_items_table).where(
+                checklist_items_table.c.id == response.checklist_item_id
+            )
+        ).first()
+        
+        result.append({
+            "id": response.id,
+            "service_order_id": response.service_order_id,
+            "checklist_item_id": response.checklist_item_id,
+            "is_checked": response.is_checked,
+            "responded_at": response.responded_at,
+            "checklist_item": {
+                "id": item.id,
+                "description": item.description,
+                "checklist_id": item.checklist_id
+            } if item else None
+        })
+    
+    return result
+
+@router.post("/{order_id}/checklist-responses/")
+def save_checklist_responses(
+    order_id: int,
+    responses: List[ChecklistResponseCreate],
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    """Salva respostas do checklist de uma ordem de serviço"""
+    # Verificar se ordem existe
+    order = db.execute(
+        select(service_orders_table).where(service_orders_table.c.id == order_id)
+    ).first()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Ordem de serviço não encontrada")
+    
+    try:
+        # Limpar respostas existentes
+        db.execute(
+            os_checklist_responses_table.delete().where(
+                os_checklist_responses_table.c.service_order_id == order_id
+            )
+        )
+        
+        # Inserir novas respostas
+        for response in responses:
+            db.execute(
+                os_checklist_responses_table.insert().values(
+                    service_order_id=order_id,
+                    checklist_item_id=response.checklist_item_id,
+                    is_checked=response.is_checked
+                )
+            )
+        
+        db.commit()
+        
+        return {"message": "Respostas do checklist salvas com sucesso"}
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao salvar respostas: {e}")

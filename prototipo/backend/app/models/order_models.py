@@ -41,6 +41,7 @@ class EquipmentRead(EquipmentBase):
 class ServiceOrderBase(BaseModel):
     title: str
     description: Optional[str] = None
+    activities_description: Optional[str] = None
     status: str = "open"
 
 class ServiceOrderCreate(ServiceOrderBase):
@@ -50,6 +51,7 @@ class ServiceOrderCreate(ServiceOrderBase):
 class ServiceOrderUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    activities_description: Optional[str] = None
     status: Optional[str] = None
 
 class ServiceOrderRead(ServiceOrderBase):

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..models.database import SessionLocal
 from ..models.auth import users_table
-from ..models.auth_models import UserBase, UserCreate, UserRead
+from ..models.auth_models import UserBase, UserCreate, UserRead, UserUpdate
 from ..middleware.auth import get_current_active_user, require_admin
 from ..utils.security import get_password_hash
 from typing import List
@@ -119,21 +119,106 @@ def create_user(
             raise HTTPException(status_code=400, detail="Username ou email já existem")
         raise HTTPException(status_code=400, detail=f"Erro ao criar usuário: {e}")
 
+@router.put("/{user_id}", response_model=UserRead)
+def update_user(
+    user_id: int,
+    user_update: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin)  # Apenas admin pode atualizar usuários
+):
+    """Atualiza um usuário (requer privilégios de administrador)"""
+    # Verificar se usuário existe
+    existing_user = db.execute(
+        users_table.select().where(users_table.c.id == user_id)
+    ).first()
+    
+    if not existing_user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    # Preparar dados para atualização
+    update_data = {}
+    if user_update.username is not None:
+        update_data["username"] = user_update.username
+    if user_update.name is not None:
+        update_data["name"] = user_update.name
+    if user_update.email is not None:
+        update_data["email"] = user_update.email
+    if user_update.role is not None:
+        update_data["role"] = user_update.role
+    if user_update.is_active is not None:
+        update_data["is_active"] = user_update.is_active
+    
+    # Atualizar senha se fornecida
+    if user_update.password is not None and user_update.password.strip():
+        update_data["password_hash"] = get_password_hash(user_update.password)
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Nenhum dado fornecido para atualização")
+    
+    # Atualizar usuário
+    stmt = users_table.update().where(
+        users_table.c.id == user_id
+    ).values(**update_data)
+    
+    try:
+        result = db.execute(stmt)
+        db.commit()
+        
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        
+        # Buscar usuário atualizado
+        updated_user = db.execute(
+            users_table.select().where(users_table.c.id == user_id)
+        ).first()
+        
+        return {
+            "id": updated_user.id,
+            "username": updated_user.username,
+            "name": updated_user.name,
+            "email": updated_user.email,
+            "role": updated_user.role,
+            "is_active": updated_user.is_active,
+            "created_at": updated_user.created_at
+        }
+        
+    except Exception as e:
+        db.rollback()
+        if "unique" in str(e).lower():
+            raise HTTPException(status_code=400, detail="Username ou email já existem")
+        raise HTTPException(status_code=400, detail=f"Erro ao atualizar usuário: {e}")
+
 @router.delete("/{user_id}")
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_user = Depends(require_admin)  # Apenas admin pode deletar usuários
 ):
-    """Desativa um usuário (soft delete) - requer privilégios de administrador"""
-    stmt = users_table.update().where(
-        users_table.c.id == user_id
-    ).values(is_active=False)
+    """Exclui um usuário permanentemente (requer privilégios de administrador)"""
+    # Verificar se usuário existe
+    existing_user = db.execute(
+        users_table.select().where(users_table.c.id == user_id)
+    ).first()
     
-    result = db.execute(stmt)
-    db.commit()
-    
-    if result.rowcount == 0:
+    if not existing_user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
-    return {"message": "Usuário desativado com sucesso"}
+    # Não permitir que admin se exclua
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Você não pode excluir a si mesmo")
+    
+    # Excluir usuário
+    stmt = users_table.delete().where(users_table.c.id == user_id)
+    
+    try:
+        result = db.execute(stmt)
+        db.commit()
+        
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        
+        return {"message": "Usuário excluído com sucesso"}
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Erro ao excluir usuário: {e}")
