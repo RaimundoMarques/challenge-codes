@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     name VARCHAR(100),
     email VARCHAR(100) UNIQUE,
-    role VARCHAR(30) DEFAULT 'tecnico', -- tecnico, administrador
+    role VARCHAR(30) DEFAULT 'tecnico',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS clients (
 
 -- Cliente de exemplo
 INSERT INTO clients (name, email, phone, address)
-VALUES ('Empresa XPTO', 'contato@xpto.com', '(11) 99999-0000', 'Rua das Flores, 123 - São Paulo/SP')
+VALUES ('Kodigos', 'contato@kodigos.com.br', '+55 (92) 99461-7117', 'Skye Platinum Offices - Av. Dr. Theomário Pinto da Costa, 811 - Sala 1201 - Chapada, Manaus - AM, 69050-055')
 ON CONFLICT DO NOTHING;
 
 -- =========================================
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS equipments (
 -- Equipamento exemplo
 INSERT INTO equipments (client_id, type, brand, model, serial_number)
 SELECT id, 'Notebook', 'Dell', 'Inspiron 15', 'SN123456789'
-FROM clients WHERE name = 'Empresa XPTO'
+FROM clients WHERE name = 'Kodigos'
 ON CONFLICT DO NOTHING;
 
 -- =========================================
@@ -77,7 +77,7 @@ SELECT c.id, e.id, u.id,
 FROM clients c
 JOIN equipments e ON e.client_id = c.id
 JOIN users u ON u.username = 'admin'
-WHERE c.name = 'Empresa XPTO'
+WHERE c.name = 'Kodigos'
 ON CONFLICT DO NOTHING;
 
 -- =========================================
@@ -145,8 +145,8 @@ CREATE TABLE IF NOT EXISTS os_photos (
 CREATE TABLE IF NOT EXISTS auth_tokens (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token TEXT UNIQUE NOT NULL, -- pode ser JWT ou UUID
+    token TEXT UNIQUE NOT NULL, -- JWT ou UUID
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,       -- validade do token
+    expires_at TIMESTAMP,       -- tempo de validade do token
     is_revoked BOOLEAN DEFAULT FALSE
 );

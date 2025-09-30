@@ -1,241 +1,341 @@
-# 🛠️ Sistema de Ordens de Serviço
+# 🚀 Sistema de Ordens de Serviço
 
-Sistema completo para gerenciamento de ordens de serviço com autenticação, checklist de atividades e upload de fotos comprovantes.
+## 📋 Visão Geral
 
-## 📋 Funcionalidades
+Sistema completo de gerenciamento de ordens de serviço desenvolvido com **FastAPI** (backend) e **Vue.js 3** (frontend), utilizando **PostgreSQL** como banco de dados e **Docker** para containerização.
 
-### ✅ **Implementadas**
-- **🔐 Autenticação JWT**: Login seguro com tokens
-- **👥 Gestão de Usuários**: CRUD completo (Criar, Listar, Editar, Excluir)
-- **📋 Ordens de Serviço**: Criação, listagem e atribuição de técnicos
-- **✅ Checklist de Atividades**: Preenchimento de checklists configuráveis
-- **📝 Descrição de Atividades**: Campo para detalhar atividades realizadas
-- **📸 Upload de Fotos**: Sistema de fotos comprovantes
-- **🎯 Atribuição de Técnicos**: Sistema de assign/reassign de técnicos
-- **🔒 Controle de Acesso**: Permissões por role (admin/tecnico)
+## 🏗️ Arquitetura do Sistema
 
-### 🎨 **Interface**
-- **📱 Responsiva**: Funciona em desktop, tablet e mobile
-- **🎨 Design Moderno**: Interface limpa e intuitiva
-- **⚡ Estados de Loading**: Feedback visual durante operações
-- **🚨 Tratamento de Erros**: Mensagens claras e informativas
-
-## 🏗️ Arquitetura
-
-### **Backend (FastAPI)**
-- **Python 3.11+** com FastAPI
-- **PostgreSQL** como banco de dados
-- **SQLAlchemy** como ORM
-- **JWT** para autenticação
-- **Bcrypt** para hash de senhas
-- **Pydantic** para validação de dados
-
-### **Frontend (Vue.js)**
-- **Vue 3** com Composition API
-- **Vue Router** para navegação
-- **Vuex** para gerenciamento de estado
-- **Axios** para requisições HTTP
-- **CSS Grid/Flexbox** para layout responsivo
-
-### **Infraestrutura**
-- **Docker** e **Docker Compose**
-- **Nginx** para servir o frontend
-- **PostgreSQL** containerizado
-- **Volumes persistentes** para dados
-
-## 🚀 Instalação e Execução
-
-### **Pré-requisitos**
-- Docker e Docker Compose instalados
-- Git
-
-### **1. Clone o Repositório**
-```bash
-git clone <url-do-repositorio>
-cd prototipo
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend       │    │   Database      │
+│   Vue.js 3      │◄──►│   FastAPI       │◄──►│   PostgreSQL    │
+│   Port: 3000    │    │   Port: 8000    │    │   Port: 5432    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### **2. Configuração do Ambiente**
-```bash
-# Copiar arquivo de ambiente (opcional - já configurado)
-cp .env.example .env
-```
+## 🚀 Tecnologias Utilizadas
 
-### **3. Executar a Aplicação**
-```bash
-# Subir todos os serviços
-docker-compose up -d --build
+### Backend
+- **FastAPI** - Framework web moderno e rápido
+- **PostgreSQL** - Banco de dados relacional
+- **SQLAlchemy** - ORM para Python
+- **JWT** - Autenticação via tokens
+- **Bcrypt** - Hash de senhas
+- **Pydantic** - Validação de dados
 
-# Verificar se todos os containers estão rodando
-docker-compose ps
-```
+### Frontend
+- **Vue.js 3** - Framework JavaScript reativo
+- **Vue Router** - Roteamento SPA
+- **Vuex** - Gerenciamento de estado
+- **Axios** - Cliente HTTP
+- **CSS3** - Estilização moderna
 
-### **4. Acessar a Aplicação**
-- **Frontend**: http://localhost:3000
-- **API Docs**: http://localhost:8000/docs
-- **API**: http://localhost:8000
+### DevOps
+- **Docker** - Containerização
+- **Docker Compose** - Orquestração
+- **Nginx** - Proxy reverso (produção)
 
-### **5. Credenciais Padrão**
-- **Usuário**: admin
-- **Senha**: 123456
-- **Role**: administrador
+## 🔐 Sistema de Autenticação
 
-## 📊 Estrutura do Banco de Dados
+### Fluxo Completo
+1. **Login**: Usuário insere credenciais
+2. **Validação**: Backend verifica no banco
+3. **JWT**: Token gerado e retornado
+4. **Storage**: Token armazenado no frontend
+5. **Requests**: Token enviado em cada requisição
+6. **Middleware**: Validação automática no backend
 
-### **Tabelas Principais**
-- **users**: Usuários do sistema
-- **clients**: Clientes
-- **equipments**: Equipamentos dos clientes
-- **service_orders**: Ordens de serviço
-- **checklists**: Templates de checklist
-- **checklist_items**: Itens dos checklists
-- **os_checklist_responses**: Respostas dos checklists por OS
-- **os_photos**: Fotos das ordens de serviço
-- **auth_tokens**: Tokens de autenticação
+### Níveis de Acesso
+- **Administrador**: Acesso total ao sistema
+- **Técnico**: Acesso limitado às suas ordens
 
-### **Relacionamentos**
-```
-Clientes (1) → (N) Equipamentos
-Equipamentos (1) → (N) Ordens de Serviço
-Usuários (1) → (N) Ordens de Serviço (como técnico)
-Checklists (1) → (N) Items de Checklist
-Ordens de Serviço (1) → (N) Respostas de Checklist
-Ordens de Serviço (1) → (N) Fotos
-```
+## 📊 Funcionalidades Principais
 
-## 🔧 Desenvolvimento
+### 👥 Gestão de Usuários
+- ✅ **CRUD completo** de usuários
+- ✅ **Roles** (administrador/técnico)
+- ✅ **Status** ativo/inativo
+- ✅ **Validação** de dados
 
-### **Estrutura do Projeto**
+### 📋 Gestão de Ordens de Serviço
+- ✅ **Criação** de novas ordens
+- ✅ **Atribuição** de técnicos
+- ✅ **Status** (aberta/em andamento/fechada)
+- ✅ **Filtros** avançados
+- ✅ **Reatribuição** de técnicos
+
+### 🏢 Gestão de Clientes e Equipamentos
+- ✅ **CRUD** de clientes
+- ✅ **CRUD** de equipamentos
+- ✅ **Relacionamento** cliente-equipamento
+- ✅ **Criação inline** durante nova ordem
+
+### 📸 Sistema de Fotos
+- ✅ **Upload** drag & drop
+- ✅ **Galeria** de fotos
+- ✅ **Modal** de visualização
+- ✅ **Exclusão** de fotos
+- ✅ **Validação** de tipos e tamanhos
+
+### ✅ Sistema de Checklist
+- ✅ **Seleção** de checklist
+- ✅ **Respostas** interativas
+- ✅ **Persistência** de dados
+- ✅ **Validação** de campos
+
+## 🏗️ Estrutura do Projeto
+
 ```
 prototipo/
 ├── backend/                 # API FastAPI
 │   ├── app/
 │   │   ├── models/         # Modelos de dados
-│   │   ├── routers/        # Rotas da API
-│   │   ├── middleware/     # Middlewares (auth)
-│   │   └── utils/          # Utilitários
+│   │   ├── routers/        # Endpoints da API
+│   │   ├── middleware/     # Middleware de auth
+│   │   └── utils/         # Utilitários
 │   ├── requirements.txt    # Dependências Python
-│   └── Dockerfile         # Container do backend
+│   └── README.md          # Documentação backend
 ├── frontend/               # Interface Vue.js
 │   ├── src/
-│   │   ├── components/     # Componentes Vue
-│   │   ├── views/          # Páginas
-│   │   ├── router/         # Configuração de rotas
-│   │   └── store/          # Estado global (Vuex)
-│   ├── package.json       # Dependências Node
-│   └── Dockerfile         # Container do frontend
-├── initdb/                # Scripts de inicialização do banco
-├── docker-compose.yml     # Orquestração dos containers
-└── README.md             # Este arquivo
+│   │   ├── components/    # Componentes modulares
+│   │   ├── views/         # Páginas principais
+│   │   ├── router/        # Configuração de rotas
+│   │   └── store/         # Gerenciamento de estado
+│   ├── package.json       # Dependências Node.js
+│   └── README.md          # Documentação frontend
+├── initdb/                # Scripts de inicialização
+│   └── schema.sql         # Schema do banco
+├── docker-compose.yml     # Orquestração Docker
+├── .env                   # Variáveis de ambiente
+└── README.md              # Este arquivo
 ```
 
-### **Comandos Úteis**
+## 🚀 Instalação e Execução
+
+### Pré-requisitos
+- Docker e Docker Compose
+- Git
+
+### 1. Clone o Repositório
 ```bash
-# Ver logs dos containers
-docker-compose logs -f [service_name]
-
-# Reiniciar um serviço específico
-docker-compose restart [service_name]
-
-# Parar todos os serviços
-docker-compose down
-
-# Parar e remover volumes (CUIDADO: apaga dados)
-docker-compose down -v
-
-# Executar comandos dentro do container
-docker-compose exec [service_name] [command]
-
-# Rebuild de um serviço específico
-docker-compose up -d --build [service_name]
+git clone <repository-url>
+cd prototipo
 ```
+
+### 2. Configuração do Ambiente
+```bash
+# Copiar arquivo de ambiente
+cp .env.example .env
+
+# Editar variáveis se necessário
+nano .env
+```
+
+### 3. Executar com Docker
+```bash
+# Build e execução
+docker-compose up -d --build
+
+# Verificar status
+docker-compose ps
+
+# Logs
+docker-compose logs -f
+```
+
+### 4. Acessar a Aplicação
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+- **Database**: localhost:5432
+
+## 🔧 Configuração de Desenvolvimento
+
+### Backend (Local)
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Frontend (Local)
+```bash
+cd frontend
+npm install
+npm run serve
+```
+
+## 📊 Banco de Dados
+
+### Schema Principal
+```sql
+-- Usuários do sistema
+users (id, username, password_hash, name, email, role, is_active, created_at)
+
+-- Clientes
+clients (id, name, email, phone, address, created_at)
+
+-- Equipamentos
+equipments (id, client_id, type, brand, model, serial_number, created_at)
+
+-- Ordens de Serviço
+service_orders (id, title, description, status, client_id, equipment_id, user_id, activities_description, created_at, updated_at)
+
+-- Fotos
+os_photos (id, service_order_id, photo_url, uploaded_at)
+
+-- Checklists
+checklists (id, name, created_at)
+checklist_items (id, checklist_id, description)
+os_checklist_responses (id, service_order_id, checklist_item_id, is_checked)
+```
+
+### Dados Iniciais
+- **Usuário Admin**: username: `admin`, password: `123456`
+- **Checklists**: Manutenção, Reparo, Instalação
+- **Clientes**: Dados de exemplo
+- **Equipamentos**: Dados de exemplo
+
+## 🔐 Segurança
+
+### Autenticação
+- **JWT Tokens** com expiração de 30 minutos
+- **Bcrypt** para hash de senhas
+- **Middleware** de validação automática
+- **Revogação** de tokens no logout
+
+### Validação
+- **Pydantic** para validação de dados
+- **SQLAlchemy** para proteção SQL injection
+- **CORS** configurado para frontend
+- **Sanitização** de inputs
+
+## 📈 Performance
+
+### Otimizações
+- **Connection Pooling** no banco
+- **Lazy Loading** de relacionamentos
+- **Componentes modulares** no frontend
+- **Lazy loading** de rotas
+- **Caching** de tokens
+
+### Monitoramento
+- **Logs estruturados** no backend
+- **Health checks** automáticos
+- **Métricas** do FastAPI
+- **Vue DevTools** no frontend
 
 ## 🧪 Testes
 
-### **Testando a API**
+### Backend
 ```bash
-# Login
-curl -X POST "http://localhost:8000/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "123456"}'
+# Testes unitários
+pytest
 
-# Listar ordens (usar token do login)
-curl -H "Authorization: Bearer <token>" \
-  "http://localhost:8000/orders/"
+# Testes de integração
+pytest tests/integration/
 ```
 
-### **Testando o Frontend**
-1. Acesse http://localhost:3000
-2. Faça login com admin/123456
-3. Navegue pelas funcionalidades:
-   - Gestão de usuários
-   - Criação de ordens
-   - Preenchimento de checklist
-   - Upload de fotos
+### Frontend
+```bash
+# Testes unitários
+npm run test:unit
 
-## 🔒 Segurança
+# Testes e2e
+npm run test:e2e
+```
 
-### **Implementadas**
-- ✅ **Autenticação JWT**: Tokens seguros com expiração
-- ✅ **Hash de Senhas**: Bcrypt para criptografia
-- ✅ **Validação de Dados**: Pydantic no backend, validações no frontend
-- ✅ **Controle de Acesso**: Permissões por role
-- ✅ **CORS**: Configurado para desenvolvimento
-- ✅ **SQL Injection**: Protegido pelo SQLAlchemy ORM
+## 🚀 Deploy em Produção
 
-### **Recomendações para Produção**
-- 🔧 Configurar HTTPS
-- 🔧 Implementar rate limiting
-- 🔧 Adicionar logs de auditoria
-- 🔧 Configurar backup automático do banco
-- 🔧 Usar secrets management para variáveis sensíveis
+### 1. Configuração do Servidor
+```bash
+# Instalar Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
 
-## 📈 Padrões de Projeto Aplicados
+# Instalar Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+```
 
-### **Backend**
-- **Repository Pattern**: Separação entre modelos e lógica de negócio
-- **Dependency Injection**: FastAPI Depends para injeção de dependências
-- **MVC**: Separação clara entre rotas, modelos e lógica
-- **Factory Pattern**: Criação de sessões de banco
-- **Strategy Pattern**: Diferentes estratégias de autenticação/autorização
+### 2. Configuração de Produção
+```bash
+# Variáveis de ambiente
+export DB_PASSWORD=your_secure_password
+export SECRET_KEY=your_secure_secret_key
 
-### **Frontend**
-- **Component Pattern**: Componentes Vue reutilizáveis
-- **Observer Pattern**: Vuex para gerenciamento de estado
-- **Module Pattern**: Organização em módulos (auth, etc.)
-- **Facade Pattern**: Axios como facade para requisições HTTP
+# Deploy
+docker-compose -f docker-compose.prod.yml up -d
+```
 
-## 🎯 Roadmap
+### 3. SSL e Domínio
+- **Certificado SSL** (Let's Encrypt)
+- **Domínio** configurado
+- **Nginx** como proxy reverso
+- **Backup** automático do banco
 
-### **Próximas Funcionalidades**
-- [ ] Sistema de notificações
-- [ ] Relatórios e dashboards
-- [ ] Histórico de alterações
-- [ ] Sistema de aprovação de OS
-- [ ] Integração com calendário
-- [ ] App mobile (React Native/Flutter)
-- [ ] Sistema de backup automático
-- [ ] Logs de auditoria
+## 📚 Documentação
+
+### API Documentation
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **OpenAPI**: http://localhost:8000/openapi.json
+
+### Componentes Frontend
+- **Vue DevTools** para debug
+- **Props/Events** documentados
+- **Styling** com CSS scoped
+- **Responsividade** mobile-first
+
+## 🐛 Troubleshooting
+
+### Problemas Comuns
+
+#### Backend
+1. **Database Connection**: Verificar variáveis de ambiente
+2. **JWT Invalid**: Verificar SECRET_KEY
+3. **CORS Error**: Verificar configuração de origins
+4. **Permission Denied**: Verificar roles de usuário
+
+#### Frontend
+1. **CORS Error**: Verificar configuração backend
+2. **Token Expired**: Refresh automático
+3. **Network Error**: Verificar conectividade
+4. **Build Error**: Limpar node_modules
+
+### Logs
+```bash
+# Backend logs
+docker-compose logs -f api
+
+# Frontend logs
+docker-compose logs -f frontend
+
+# Database logs
+docker-compose logs -f db-postgres
+```
+
+## 📞 Suporte
+
+Para dúvidas ou problemas:
+1. Verificar logs da aplicação
+2. Consultar documentação Swagger
+3. Verificar configuração de ambiente
+4. Testar endpoints individualmente
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
 5. Abra um Pull Request
 
-## 📝 Licença
+## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
-## 📞 Suporte
-
-Para dúvidas ou suporte:
-- 📧 Email: [seu-email@exemplo.com]
-- 🐛 Issues: [GitHub Issues]
-- 📖 Documentação: [Wiki do projeto]
-
 ---
 
-**Desenvolvido com ❤️ para otimizar o gerenciamento de ordens de serviço**
+**Desenvolvido usando FastAPI + Vue.js 3 + PostgreSQL**
