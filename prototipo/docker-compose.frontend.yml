@@ -1,0 +1,30 @@
+# docker-compose.frontend.yml
+# Docker Compose para Frontend (Aplicação Vue.js)
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: prototipo-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VUE_APP_API_URL=http://localhost:8000
+    # O frontend não depende diretamente do backend via docker-compose
+    # Ele se conecta via HTTP na URL configurada no environment
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: prototipo-frontend-network
+

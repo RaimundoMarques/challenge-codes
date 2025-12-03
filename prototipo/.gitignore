@@ -22,3 +22,18 @@ frontend/.vscode/
 
 # Data
 /data
+
+# Docker
+docker-compose.yml.backup
+*.backup
+
+# Uploads (fotos temporárias)
+backend/uploads/
+
+# Scripts temporários
+start-services.*
+*test-endpoints.sh
+
+# Documentação temporária
+*DIAGNOSTICO*.md
+*WSL*.md

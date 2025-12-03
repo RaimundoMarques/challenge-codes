@@ -94,19 +94,30 @@ prototipo/
 │   │   ├── routers/        # Endpoints da API
 │   │   ├── middleware/     # Middleware de auth
 │   │   └── utils/         # Utilitários
+│   ├── docs/              # Documentação do backend
+│   │   └── README.md
+│   ├── initdb/            # Scripts de inicialização do banco
+│   │   ├── schema.sql     # Schema do banco
+│   │   └── add_activities_description.sql
 │   ├── requirements.txt    # Dependências Python
-│   └── README.md          # Documentação backend
+│   └── Dockerfile         # Dockerfile do backend
 ├── frontend/               # Interface Vue.js
 │   ├── src/
 │   │   ├── components/    # Componentes modulares
 │   │   ├── views/         # Páginas principais
 │   │   ├── router/        # Configuração de rotas
 │   │   └── store/         # Gerenciamento de estado
+│   ├── docs/              # Documentação do frontend
+│   │   └── README.md
 │   ├── package.json       # Dependências Node.js
-│   └── README.md          # Documentação frontend
-├── initdb/                # Scripts de inicialização
-│   └── schema.sql         # Schema do banco
-├── docker-compose.yml     # Orquestração Docker
+│   └── Dockerfile         # Dockerfile do frontend
+├── docs/                   # Documentação geral
+│   ├── README-DOCKER.md
+│   ├── ESTRUTURA-REORGANIZADA.md
+│   ├── RELATORIO_TESTES.md
+│   └── AJUSTES_REALIZADOS.md
+├── docker-compose.backend.yml    # Compose do backend
+├── docker-compose.frontend.yml   # Compose do frontend
 ├── .env                   # Variáveis de ambiente
 └── README.md              # Este arquivo
 ```
@@ -133,16 +144,36 @@ nano .env
 ```
 
 ### 3. Executar com Docker
+
+#### Opção 1: Usando Scripts (Recomendado)
 ```bash
-# Build e execução
-docker-compose up -d --build
+# Iniciar tudo
+./start.sh
+
+# Iniciar apenas backend
+./start.sh backend
+
+# Iniciar apenas frontend
+./start.sh frontend
+
+# Parar tudo
+./stop.sh
+```
+
+#### Opção 2: Docker Compose Manual
+```bash
+# Backend (DB + API)
+docker-compose -f docker-compose.backend.yml up -d --build
+
+# Frontend
+docker-compose -f docker-compose.frontend.yml up -d --build
 
 # Verificar status
-docker-compose ps
-
-# Logs
-docker-compose logs -f
+docker-compose -f docker-compose.backend.yml ps
+docker-compose -f docker-compose.frontend.yml ps
 ```
+
+**📚 Para mais detalhes sobre Docker, consulte: [docs/README-DOCKER.md](docs/README-DOCKER.md)**
 
 ### 4. Acessar a Aplicação
 - **Frontend**: http://localhost:3000
@@ -277,6 +308,16 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## 📚 Documentação
 
+### Documentação Geral
+- **[README-DOCKER.md](docs/README-DOCKER.md)** - Guia completo do Docker
+- **[ESTRUTURA-REORGANIZADA.md](docs/ESTRUTURA-REORGANIZADA.md)** - Estrutura do projeto
+- **[RELATORIO_TESTES.md](docs/RELATORIO_TESTES.md)** - Relatório de testes dos endpoints
+- **[AJUSTES_REALIZADOS.md](docs/AJUSTES_REALIZADOS.md)** - Ajustes e correções
+
+### Documentação por Módulo
+- **[Backend](backend/docs/README.md)** - Documentação completa da API
+- **[Frontend](frontend/docs/README.md)** - Documentação completa do frontend
+
 ### API Documentation
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
@@ -307,14 +348,14 @@ docker-compose -f docker-compose.prod.yml up -d
 ### Logs
 ```bash
 # Backend logs
-docker-compose logs -f api
+docker-compose -f docker-compose.backend.yml logs -f api
+docker-compose -f docker-compose.backend.yml logs -f db-postgres
 
 # Frontend logs
-docker-compose logs -f frontend
-
-# Database logs
-docker-compose logs -f db-postgres
+docker-compose -f docker-compose.frontend.yml logs -f frontend
 ```
+
+**📚 Para mais informações, consulte a [documentação completa](docs/README-DOCKER.md)**
 
 ## 📞 Suporte
 

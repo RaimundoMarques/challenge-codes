@@ -1,0 +1,53 @@
+# docker-compose.backend.yml
+# Docker Compose para Backend (Banco de Dados + API)
+services:
+  db-postgres:
+    image: postgres:15.3-alpine
+    container_name: prototipo-db-postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5441:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./backend/initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: prototipo-api
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      db-postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/code
+    environment:
+      - DB_HOST=db-postgres
+      - DB_PORT=5432
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: prototipo-backend-network
+
