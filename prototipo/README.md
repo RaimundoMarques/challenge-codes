@@ -113,11 +113,12 @@ prototipo/
 │   └── Dockerfile         # Dockerfile do frontend
 ├── docs/                   # Documentação geral
 │   ├── README-DOCKER.md
-│   ├── ESTRUTURA-REORGANIZADA.md
 │   ├── RELATORIO_TESTES.md
-│   └── AJUSTES_REALIZADOS.md
-├── docker-compose.backend.yml    # Compose do backend
+│   └── HISTORICO_MUDANCAS.md
+├── docker-compose.backend.yml    # Compose do backend (Banco + API)
 ├── docker-compose.frontend.yml   # Compose do frontend
+├── start.sh               # Script para iniciar serviços
+├── stop.sh                # Script para parar serviços
 ├── .env                   # Variáveis de ambiente
 └── README.md              # Este arquivo
 ```
@@ -145,20 +146,33 @@ nano .env
 
 ### 3. Executar com Docker
 
-#### Opção 1: Usando Scripts (Recomendado)
-```bash
-# Iniciar tudo
-./start.sh
+#### ⚡ Opção 1: Usando Scripts (Recomendado - Mais Simples!)
 
-# Iniciar apenas backend
+Os scripts estão prontos para uso e permitem subir os serviços de forma independente:
+
+```bash
+# 🚀 Iniciar TUDO (Backend + Frontend)
+./start.sh
+# ou
+./start.sh all
+
+# 🔧 Iniciar apenas BACKEND (Banco + API)
 ./start.sh backend
 
-# Iniciar apenas frontend
+# 🎨 Iniciar apenas FRONTEND
 ./start.sh frontend
 
-# Parar tudo
+# 🛑 Parar tudo
 ./stop.sh
+
+# 🛑 Parar apenas backend
+./stop.sh backend
+
+# 🛑 Parar apenas frontend
+./stop.sh frontend
 ```
+
+**💡 Dica:** Use `./start.sh backend` para trabalhar apenas na API, ou `./start.sh frontend` quando precisar testar apenas a interface!
 
 #### Opção 2: Docker Compose Manual
 ```bash
@@ -310,9 +324,8 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### Documentação Geral
 - **[README-DOCKER.md](docs/README-DOCKER.md)** - Guia completo do Docker
-- **[ESTRUTURA-REORGANIZADA.md](docs/ESTRUTURA-REORGANIZADA.md)** - Estrutura do projeto
 - **[RELATORIO_TESTES.md](docs/RELATORIO_TESTES.md)** - Relatório de testes dos endpoints
-- **[AJUSTES_REALIZADOS.md](docs/AJUSTES_REALIZADOS.md)** - Ajustes e correções
+- **[HISTORICO_MUDANCAS.md](docs/HISTORICO_MUDANCAS.md)** - Histórico de mudanças e ajustes
 
 ### Documentação por Módulo
 - **[Backend](backend/docs/README.md)** - Documentação completa da API
