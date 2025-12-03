@@ -94,6 +94,7 @@ def list_orders(
             "id": row.id,
             "title": row.title,
             "description": row.description,
+            "activities_description": row.activities_description,
             "status": row.status,
             "client_id": row.client_id,
             "equipment_id": row.equipment_id,
@@ -242,6 +243,7 @@ def create_order(
         user_id=current_user.id,
         title=order.title,
         description=order.description,
+        activities_description=order.activities_description,
         status=order.status
     )
     
@@ -258,6 +260,7 @@ def create_order(
             "id": new_order.id,
             "title": new_order.title,
             "description": new_order.description,
+            "activities_description": new_order.activities_description,
             "status": new_order.status,
             "client_id": new_order.client_id,
             "equipment_id": new_order.equipment_id,
@@ -356,6 +359,7 @@ def update_order(
             "id": updated_order.id,
             "title": updated_order.title,
             "description": updated_order.description,
+            "activities_description": updated_order.activities_description,
             "status": updated_order.status,
             "client_id": updated_order.client_id,
             "equipment_id": updated_order.equipment_id,
