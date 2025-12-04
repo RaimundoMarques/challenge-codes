@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api/axios'
 import { mapState } from 'vuex'
 import UsersList from '../components/UsersComponents/UsersList.vue'
 import UserEditModal from '../components/UsersComponents/UserEditModal.vue'
@@ -87,7 +87,7 @@ export default {
       this.error = null
       
       try {
-        const response = await axios.get('http://localhost:8000/users/')
+        const response = await api.get('/users/')
         this.users = response.data
       } catch (error) {
         this.error = error.response?.data?.detail || error.message
@@ -113,7 +113,7 @@ export default {
       this.updating = true
       
       try {
-        await axios.put(`http://localhost:8000/users/${this.selectedUser.id}`, updateData)
+        await api.put(`/users/${this.selectedUser.id}`, updateData)
         
         // Recarregar lista de usuários
         await this.loadUsers()
@@ -147,7 +147,7 @@ export default {
       this.deleting = true
       
       try {
-        await axios.delete(`http://localhost:8000/users/${user.id}`)
+        await api.delete(`/users/${user.id}`)
         
         // Recarregar lista de usuários
         await this.loadUsers()

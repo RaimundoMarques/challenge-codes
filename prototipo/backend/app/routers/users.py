@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from ..models.database import SessionLocal
 from ..models.auth import users_table
-from ..models.auth_models import UserBase, UserCreate, UserRead, UserUpdate
+from ..models.orders import service_orders_table
+from ..models.auth_models import UserCreate, UserRead, UserUpdate
 from ..middleware.auth import get_current_active_user, require_admin
 from ..utils.security import get_password_hash
 from typing import List
@@ -207,6 +209,18 @@ def delete_user(
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Você não pode excluir a si mesmo")
     
+    # Verificar se o usuário tem ordens de serviço associadas
+    orders_count = db.execute(
+        select(service_orders_table.c.id).where(service_orders_table.c.user_id == user_id)
+    ).fetchall()
+    
+    if orders_count:
+        count = len(orders_count)
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Este usuário está vinculado a {count} ordem(ns) de serviço. Reatribua as ordens para outro técnico ou desative o usuário em vez de excluí-lo."
+        )
+    
     # Excluir usuário
     stmt = users_table.delete().where(users_table.c.id == user_id)
     
@@ -221,4 +235,24 @@ def delete_user(
         
     except Exception as e:
         db.rollback()
+        # Verificar se é erro de foreign key
+        error_str = str(e).lower()
+        if "foreign key" in error_str or "violates foreign key constraint" in error_str or "service_orders" in error_str:
+            # Contar quantas ordens estão vinculadas
+            try:
+                orders_count = db.execute(
+                    select(service_orders_table.c.id).where(service_orders_table.c.user_id == user_id)
+                ).fetchall()
+                count = len(orders_count)
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Este usuário está vinculado a {count} ordem(ns) de serviço. Reatribua as ordens para outro técnico ou desative o usuário em vez de excluí-lo."
+                )
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Este usuário está vinculado a ordens de serviço. Reatribua as ordens para outro técnico ou desative o usuário em vez de excluí-lo."
+                )
         raise HTTPException(status_code=400, detail=f"Erro ao excluir usuário: {e}")
