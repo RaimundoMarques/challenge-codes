@@ -69,7 +69,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../../api/axios'
 
 export default {
   name: 'ClientForm',
@@ -98,7 +98,7 @@ export default {
       if (!this.client.name.trim()) return
       
       try {
-        const response = await axios.post('http://localhost:8000/orders/clients/', this.client)
+        const response = await api.post('/orders/clients/', this.client)
         
         // Emitir evento de sucesso com o cliente criado
         this.$emit('client-created', response.data)

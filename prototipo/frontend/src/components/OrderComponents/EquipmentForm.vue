@@ -69,7 +69,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../../api/axios'
 
 export default {
   name: 'EquipmentForm',
@@ -107,7 +107,7 @@ export default {
           client_id: parseInt(this.clientId)
         }
         
-        const response = await axios.post('http://localhost:8000/orders/equipments/', equipmentData)
+        const response = await api.post('/orders/equipments/', equipmentData)
         
         // Emitir evento de sucesso com o equipamento criado
         this.$emit('equipment-created', response.data)

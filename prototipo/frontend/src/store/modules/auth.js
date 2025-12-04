@@ -2,6 +2,14 @@ import axios from 'axios'
 
 const API_BASE_URL = 'http://localhost:8000'
 
+// Instância do axios para autenticação (sem interceptors para evitar dependência circular)
+const authAxios = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
 const state = {
   user: null,
   token: null,
@@ -52,12 +60,12 @@ const actions = {
     commit('SET_ERROR', null)
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials)
+      const response = await authAxios.post('/auth/login', credentials)
       const { access_token, user } = response.data
       
       commit('SET_AUTH', { user, token: access_token })
       
-      // Configurar token no axios para próximas requisições
+      // Configurar token no axios global para compatibilidade
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
       
       return { success: true, user }
@@ -70,18 +78,23 @@ const actions = {
     }
   },
   
-  async logout({ commit }) {
+  async logout({ commit, state }) {
     commit('SET_LOADING', true)
     
     try {
       // Tentar fazer logout no servidor
-      await axios.post(`${API_BASE_URL}/auth/logout`)
+      const token = state.token || localStorage.getItem('auth_token')
+      if (token) {
+        authAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        await authAxios.post('/auth/logout')
+      }
     } catch (error) {
       console.warn('Erro ao fazer logout no servidor:', error)
     } finally {
       // Limpar estado local independentemente do servidor
       commit('CLEAR_AUTH')
       delete axios.defaults.headers.common['Authorization']
+      delete authAxios.defaults.headers.common['Authorization']
       commit('SET_LOADING', false)
     }
   },
@@ -97,7 +110,8 @@ const actions = {
     // Se já temos usuário e token, verificar se ainda é válido
     if (state.token && state.user) {
       try {
-        await axios.post(`${API_BASE_URL}/auth/verify-token`)
+        authAxios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`
+        await authAxios.post('/auth/verify-token')
         return true
       } catch (error) {
         commit('CLEAR_AUTH')
@@ -107,8 +121,8 @@ const actions = {
     
     // Se não temos usuário, buscar dados do token
     try {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      const response = await axios.get(`${API_BASE_URL}/auth/me`)
+      authAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      const response = await authAxios.get('/auth/me')
       const user = response.data
       
       commit('SET_AUTH', { user, token })
@@ -119,9 +133,13 @@ const actions = {
     }
   },
   
-  async fetchUser({ commit }) {
+  async fetchUser({ commit, state }) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/auth/me`)
+      const token = state.token || localStorage.getItem('auth_token')
+      if (token) {
+        authAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      }
+      const response = await authAxios.get('/auth/me')
       commit('SET_USER', response.data)
       return response.data
     } catch (error) {

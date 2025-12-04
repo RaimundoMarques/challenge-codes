@@ -19,7 +19,7 @@
         </select>
         <button 
           type="button" 
-          @click="showNewClientForm = !showNewClientForm"
+          @click="toggleNewClientForm"
           class="btn btn-sm btn-outline"
         >
           + Novo Cliente
@@ -42,7 +42,7 @@
         </select>
         <button 
           type="button" 
-          @click="showNewEquipmentForm = !showNewEquipmentForm"
+          @click="toggleNewEquipmentForm"
           class="btn btn-sm btn-outline"
           :disabled="!selectedClientId"
         >
@@ -81,9 +81,7 @@ export default {
   data() {
     return {
       selectedClientId: this.clientId,
-      selectedEquipmentId: this.equipmentId,
-      showNewClientForm: false,
-      showNewEquipmentForm: false
+      selectedEquipmentId: this.equipmentId
     }
   },
   watch: {
@@ -113,14 +111,14 @@ export default {
       return description
     },
     
-    onClientCreated(client) {
-      this.showNewClientForm = false
-      this.$emit('client-created', client)
+    toggleNewClientForm() {
+      this.$emit('show-new-client-form')
     },
     
-    onEquipmentCreated(equipment) {
-      this.showNewEquipmentForm = false
-      this.$emit('equipment-created', equipment)
+    toggleNewEquipmentForm() {
+      if (this.selectedClientId) {
+        this.$emit('show-new-equipment-form')
+      }
     }
   }
 }

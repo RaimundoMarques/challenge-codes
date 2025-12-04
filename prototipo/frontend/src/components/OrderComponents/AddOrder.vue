@@ -22,8 +22,8 @@
           :equipment-id="form.equipment_id"
           @client-selected="handleClientSelected"
           @equipment-selected="handleEquipmentSelected"
-          @client-created="handleClientCreated"
-          @equipment-created="handleEquipmentCreated"
+          @show-new-client-form="showNewClientForm = true"
+          @show-new-equipment-form="showNewEquipmentForm = true"
         />
         
         <!-- Formulário de Novo Cliente -->
@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../../api/axios'
 import OrderForm from './OrderForm.vue'
 import ClientEquipmentSelector from './ClientEquipmentSelector.vue'
 import ClientForm from './ClientForm.vue'
@@ -139,7 +139,7 @@ export default {
     
     async loadClients() {
       try {
-        const response = await axios.get('http://localhost:8000/orders/clients/')
+        const response = await api.get('/orders/clients/')
         this.clients = response.data
       } catch (error) {
         console.error('Erro ao carregar clientes:', error)
@@ -154,7 +154,7 @@ export default {
       }
       
       try {
-        const response = await axios.get(`http://localhost:8000/orders/equipments/?client_id=${clientId}`)
+        const response = await api.get(`/orders/equipments/?client_id=${clientId}`)
         this.equipments = response.data
       } catch (error) {
         console.error('Erro ao carregar equipamentos:', error)
@@ -164,7 +164,7 @@ export default {
     
     async loadTechnicians() {
       try {
-        const response = await axios.get('http://localhost:8000/users/')
+        const response = await api.get('/users/')
         this.technicians = response.data.filter(user => 
           user.role === 'tecnico' || user.role === 'administrador'
         )
@@ -219,7 +219,7 @@ export default {
           technician_id: parseInt(this.form.technician_id)
         }
         
-        const response = await axios.post('http://localhost:8000/orders/', orderData)
+        const response = await api.post('/orders/', orderData)
         
         alert('Ordem de serviço criada com sucesso!')
         this.$router.push('/orders')
