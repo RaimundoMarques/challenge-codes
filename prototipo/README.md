@@ -148,7 +148,7 @@ nano .env
 
 #### ⚡ Opção 1: Usando Scripts (Recomendado - Mais Simples!)
 
-Os scripts estão prontos para uso e permitem subir os serviços de forma independente:
+Os scripts automatizam o Docker Compose e permitem subir os serviços de forma independente. **Tudo continua rodando em containers Docker!**
 
 ```bash
 # 🚀 Iniciar TUDO (Backend + Frontend)
@@ -156,10 +156,10 @@ Os scripts estão prontos para uso e permitem subir os serviços de forma indepe
 # ou
 ./start.sh all
 
-# 🔧 Iniciar apenas BACKEND (Banco + API)
+# 🔧 Iniciar apenas BACKEND (Banco + API) - em containers Docker
 ./start.sh backend
 
-# 🎨 Iniciar apenas FRONTEND
+# 🎨 Iniciar apenas FRONTEND - em container Docker
 ./start.sh frontend
 
 # 🛑 Parar tudo
@@ -173,6 +173,14 @@ Os scripts estão prontos para uso e permitem subir os serviços de forma indepe
 ```
 
 **💡 Dica:** Use `./start.sh backend` para trabalhar apenas na API, ou `./start.sh frontend` quando precisar testar apenas a interface!
+
+**🐳 Nota:** Os scripts executam comandos Docker Compose por trás. Você pode verificar os containers com:
+```bash
+docker ps
+# ou
+docker-compose -f docker-compose.backend.yml ps
+docker-compose -f docker-compose.frontend.yml ps
+```
 
 #### Opção 2: Docker Compose Manual
 ```bash
@@ -205,11 +213,41 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend (Local)
+
+#### ✅ Opção 1: Com npm (Recomendado para desenvolvimento rápido)
+
+Você pode rodar o frontend diretamente com npm, sem Docker:
+
 ```bash
 cd frontend
 npm install
 npm run serve
 ```
+
+O frontend estará disponível em: **http://localhost:3000**
+
+**💡 Vantagens:**
+- ✅ Hot reload mais rápido
+- ✅ Debug mais fácil
+- ✅ Sem precisar reconstruir containers
+- ✅ Ideal para desenvolvimento
+
+**⚠️ Importante:** Certifique-se de que o backend está rodando (via Docker com `./start.sh backend` ou localmente) para que o frontend possa se conectar à API em `http://localhost:8000`.
+
+#### 🐳 Opção 2: Com Docker (Ambiente isolado)
+
+```bash
+# Usando o script
+./start.sh frontend
+
+# Ou manualmente
+docker-compose -f docker-compose.frontend.yml up -d --build
+```
+
+**💡 Quando usar Docker:**
+- ✅ Ambiente de produção/teste
+- ✅ Garantir consistência entre desenvolvedores
+- ✅ Quando não tem Node.js instalado localmente
 
 ## 📊 Banco de Dados
 
@@ -346,17 +384,27 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### Problemas Comuns
 
+#### ❌ Docker não está rodando
+**Erro:** `error during connect: Get "http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine...": open //./pipe/dockerDesktopLinuxEngine: O sistema não pode encontrar o arquivo especificado.`
+
+**Solução:**
+1. Abra o **Docker Desktop** no Windows
+2. Aguarde o Docker inicializar completamente (ícone do Docker na bandeja deve ficar verde)
+3. Execute o script novamente: `./start.sh backend` ou `./start.sh frontend`
+
+Os scripts agora verificam automaticamente se o Docker está rodando e exibem uma mensagem clara caso não esteja!
+
 #### Backend
-1. **Database Connection**: Verificar variáveis de ambiente
-2. **JWT Invalid**: Verificar SECRET_KEY
-3. **CORS Error**: Verificar configuração de origins
+1. **Database Connection**: Verificar variáveis de ambiente no arquivo `.env`
+2. **JWT Invalid**: Verificar SECRET_KEY no arquivo `.env`
+3. **CORS Error**: Verificar configuração de origins no backend
 4. **Permission Denied**: Verificar roles de usuário
 
 #### Frontend
-1. **CORS Error**: Verificar configuração backend
-2. **Token Expired**: Refresh automático
-3. **Network Error**: Verificar conectividade
-4. **Build Error**: Limpar node_modules
+1. **CORS Error**: Verificar configuração backend e se a API está rodando
+2. **Token Expired**: Refresh automático ou fazer logout/login novamente
+3. **Network Error**: Verificar se o backend está rodando (`./start.sh backend`)
+4. **Build Error**: Limpar node_modules e reinstalar dependências
 
 ### Logs
 ```bash
