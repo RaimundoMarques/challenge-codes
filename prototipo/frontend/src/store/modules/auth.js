@@ -126,6 +126,10 @@ const actions = {
       const user = response.data
       
       commit('SET_AUTH', { user, token })
+      
+      // Configurar token no axios global para compatibilidade
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      
       return true
     } catch (error) {
       commit('CLEAR_AUTH')
