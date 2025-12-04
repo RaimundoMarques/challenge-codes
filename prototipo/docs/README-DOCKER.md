@@ -5,7 +5,7 @@
 O projeto foi reorganizado para separar as responsabilidades:
 
 ```
-prototipo/
+manufacturing-system/
 ├── docker-compose.backend.yml    # Backend (DB + API)
 ├── docker-compose.frontend.yml   # Frontend (Vue.js)
 ├── backend/
@@ -24,11 +24,11 @@ prototipo/
 ### Backend (Banco + API)
 - **PostgreSQL**: Banco de dados
 - **FastAPI**: API REST
-- **Rede**: `prototipo-backend-network`
+- **Rede**: `manufacturing-system-backend-network`
 
 ### Frontend
 - **Vue.js**: Aplicação frontend
-- **Rede**: `prototipo-frontend-network`
+- **Rede**: `manufacturing-system-frontend-network`
 - **Comunicação**: Via HTTP com a API (http://localhost:8000)
 
 ---

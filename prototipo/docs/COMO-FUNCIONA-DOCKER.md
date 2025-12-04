@@ -12,8 +12,8 @@ Os scripts (`start.sh` e `stop.sh`) são apenas **atalhos simplificados** que ex
 docker-compose -f docker-compose.backend.yml up -d --build
 
 # Isso cria/sobe os containers:
-# ✅ prototipo-db-postgres (PostgreSQL)
-# ✅ prototipo-api (FastAPI)
+# ✅ manufacturing-system-db-postgres (PostgreSQL)
+# ✅ manufacturing-system-api (FastAPI)
 ```
 
 ### `./start.sh frontend`
@@ -22,7 +22,7 @@ docker-compose -f docker-compose.backend.yml up -d --build
 docker-compose -f docker-compose.frontend.yml up -d --build
 
 # Isso cria/sobe o container:
-# ✅ prototipo-frontend (Vue.js)
+# ✅ manufacturing-system-frontend (Vue.js)
 ```
 
 ### `./stop.sh backend`
@@ -31,8 +31,8 @@ docker-compose -f docker-compose.frontend.yml up -d --build
 docker-compose -f docker-compose.backend.yml down
 
 # Isso para e remove os containers:
-# 🛑 prototipo-db-postgres
-# 🛑 prototipo-api
+# 🛑 manufacturing-system-db-postgres
+# 🛑 manufacturing-system-api
 ```
 
 ## 🔍 Como verificar que está rodando no Docker?
@@ -45,9 +45,9 @@ docker ps
 Você verá algo assim:
 ```
 CONTAINER ID   IMAGE                     STATUS          PORTS
-abc123def456   prototipo-frontend        Up 2 minutes    0.0.0.0:3000->3000/tcp
-xyz789ghi012   prototipo-api             Up 5 minutes    0.0.0.0:8000->8000/tcp
-def456abc123   postgres:15.3-alpine      Up 5 minutes    0.0.0.0:5441->5432/tcp
+abc123def456   manufacturing-system-frontend        Up 2 minutes    0.0.0.0:3000->3000/tcp
+xyz789ghi012   manufacturing-system-api             Up 5 minutes    0.0.0.0:8000->8000/tcp
+def456abc123   postgres:15.3-alpine                 Up 5 minutes    0.0.0.0:5441->5432/tcp
 ```
 
 ### 2. Ver containers específicos do backend
@@ -69,9 +69,9 @@ docker-compose -f docker-compose.backend.yml logs -f
 docker-compose -f docker-compose.frontend.yml logs -f
 
 # Ou ver logs direto pelo Docker
-docker logs prototipo-api
-docker logs prototipo-frontend
-docker logs prototipo-db-postgres
+docker logs manufacturing-system-api
+docker logs manufacturing-system-frontend
+docker logs manufacturing-system-db-postgres
 ```
 
 ## 🎯 Vantagens dos Scripts
@@ -122,18 +122,18 @@ Os scripts são apenas uma camada de conveniência!
 ## 📦 Estrutura dos Containers
 
 ### Backend (`docker-compose.backend.yml`)
-- **Container:** `prototipo-db-postgres`
+- **Container:** `manufacturing-system-db-postgres`
   - **Imagem:** `postgres:15.3-alpine`
   - **Porta:** `5441:5432`
   - **Volume:** `./data/postgres` (persistência de dados)
 
-- **Container:** `prototipo-api`
+- **Container:** `manufacturing-system-api`
   - **Build:** `./backend/Dockerfile`
   - **Porta:** `8000:8000`
   - **Volume:** `./backend:/code` (hot reload)
 
 ### Frontend (`docker-compose.frontend.yml`)
-- **Container:** `prototipo-frontend`
+- **Container:** `manufacturing-system-frontend`
   - **Build:** `./frontend/Dockerfile`
   - **Porta:** `3000:3000`
   - **Volume:** `./frontend:/app` (hot reload)

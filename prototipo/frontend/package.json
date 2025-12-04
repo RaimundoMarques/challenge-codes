@@ -1,7 +1,7 @@
 {
-  "name": "prototipo-frontend",
+  "name": "manufacturing-system-frontend",
   "version": "1.0.0",
-  "description": "Frontend Vue.js para o protótipo de Ordens de Serviço",
+  "description": "Frontend Vue.js para o Manufacturing System",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve --host 0.0.0.0 --port 3000",

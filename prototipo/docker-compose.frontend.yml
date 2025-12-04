@@ -5,7 +5,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: prototipo-frontend
+    container_name: manufacturing-system-frontend
     restart: always
     ports:
       - "3000:3000"
@@ -26,5 +26,5 @@ services:
 
 networks:
   default:
-    name: prototipo-frontend-network
+    name: manufacturing-system-frontend-network
 

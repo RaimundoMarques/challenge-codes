@@ -1,4 +1,4 @@
-# 🚀 Sistema de Ordens de Serviço
+# 🏭 Manufacturing System
 
 ## 📋 Visão Geral
 
@@ -87,7 +87,7 @@ Sistema completo de gerenciamento de ordens de serviço desenvolvido com **FastA
 ## 🏗️ Estrutura do Projeto
 
 ```
-prototipo/
+manufacturing-system/
 ├── backend/                 # API FastAPI
 │   ├── app/
 │   │   ├── models/         # Modelos de dados
@@ -132,7 +132,7 @@ prototipo/
 ### 1. Clone o Repositório
 ```bash
 git clone <repository-url>
-cd prototipo
+cd manufacturing-system
 ```
 
 ### 2. Configuração do Ambiente
@@ -440,4 +440,4 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ---
 
-**Desenvolvido usando FastAPI + Vue.js 3 + PostgreSQL**
+**Manufacturing System - Desenvolvido usando FastAPI + Vue.js 3 + PostgreSQL**
