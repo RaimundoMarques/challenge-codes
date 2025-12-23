@@ -13,8 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Inserindo técnico administrador
+-- Senha: 123456 (hash bcrypt)
 INSERT INTO users (username, password_hash, name, email, role)
-VALUES ('admin', '123456', 'Administrador', 'admin@empresa.com', 'administrador')
+VALUES ('admin', '$2b$12$SnxPa/1XTSLcB262HfETa.fEhWIQ5wRLMQNleuqDM9WoA/mwyx2Z2', 'Administrador', 'admin@empresa.com', 'administrador')
 ON CONFLICT (username) DO NOTHING;
 
 -- =========================================

@@ -18,7 +18,14 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica se a senha está correta"""
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    try:
+        # Verificar se é um hash bcrypt válido (começa com $2b$)
+        if not hashed_password.startswith('$2b$'):
+            # Se não for hash bcrypt, comparar texto plano (compatibilidade com dados antigos)
+            return plain_password == hashed_password
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception:
+        return False
 
 def get_password_hash(password: str) -> str:
     """Gera hash da senha"""
