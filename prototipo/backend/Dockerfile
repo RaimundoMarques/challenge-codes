@@ -13,8 +13,11 @@ RUN apt-get update && apt-get install -y \
 
 # Copiar e instalar dependências Python
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Configurar pip para lidar com certificados SSL (comum em ambientes corporativos)
+# trusted-host permite bypass de verificação SSL para hosts específicos
+RUN pip config set global.trusted-host "pypi.org files.pythonhosted.org pypi.python.org" && \
+    pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org --default-timeout=100 --prefer-binary -r requirements.txt
 
 # Copiar código da aplicação
 COPY ./app ./app
