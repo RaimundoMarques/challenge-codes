@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS clients (
 
 -- Cliente de exemplo
 INSERT INTO clients (name, email, phone, address)
-VALUES ('Kodigos', 'contato@kodigos.com.br', '+55 (92) 99461-7117', 'Skye Platinum Offices - Av. Dr. Theomário Pinto da Costa, 811 - Sala 1201 - Chapada, Manaus - AM, 69050-055')
-ON CONFLICT DO NOTHING;
+SELECT 'Kodigos', 'contato@kodigos.com.br', '+55 (92) 99461-7117', 'Skye Platinum Offices - Av. Dr. Theomário Pinto da Costa, 811 - Sala 1201 - Chapada, Manaus - AM, 69050-055'
+WHERE NOT EXISTS (SELECT 1 FROM clients WHERE name = 'Kodigos');
 
 -- =========================================
 -- Equipamentos
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS equipments (
 INSERT INTO equipments (client_id, type, brand, model, serial_number)
 SELECT id, 'Notebook', 'Dell', 'Inspiron 15', 'SN123456789'
 FROM clients WHERE name = 'Kodigos'
-ON CONFLICT DO NOTHING;
+ON CONFLICT (serial_number) DO NOTHING;
 
 -- =========================================
 -- Ordem de Serviço
@@ -78,7 +78,12 @@ FROM clients c
 JOIN equipments e ON e.client_id = c.id
 JOIN users u ON u.username = 'admin'
 WHERE c.name = 'Kodigos'
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (
+    SELECT 1 FROM service_orders so 
+    WHERE so.client_id = c.id 
+      AND so.equipment_id = e.id 
+      AND so.title = 'Formatação de notebook'
+  );
 
 -- =========================================
 -- Checklists
@@ -96,28 +101,28 @@ CREATE TABLE IF NOT EXISTS checklist_items (
 
 -- Checklist exemplo: manutenção preventiva de computadores
 INSERT INTO checklists (name)
-VALUES ('Manutenção preventiva de computadores')
-ON CONFLICT DO NOTHING;
+SELECT 'Manutenção preventiva de computadores'
+WHERE NOT EXISTS (SELECT 1 FROM checklists WHERE name = 'Manutenção preventiva de computadores');
 
 INSERT INTO checklist_items (checklist_id, description)
 SELECT c.id, 'Verificar saúde do HD/SSD'
 FROM checklists c WHERE c.name = 'Manutenção preventiva de computadores'
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (SELECT 1 FROM checklist_items WHERE checklist_id = c.id AND description = 'Verificar saúde do HD/SSD');
 
 INSERT INTO checklist_items (checklist_id, description)
 SELECT c.id, 'Limpar ventoinhas e dissipadores'
 FROM checklists c WHERE c.name = 'Manutenção preventiva de computadores'
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (SELECT 1 FROM checklist_items WHERE checklist_id = c.id AND description = 'Limpar ventoinhas e dissipadores');
 
 INSERT INTO checklist_items (checklist_id, description)
 SELECT c.id, 'Trocar pasta térmica do processador'
 FROM checklists c WHERE c.name = 'Manutenção preventiva de computadores'
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (SELECT 1 FROM checklist_items WHERE checklist_id = c.id AND description = 'Trocar pasta térmica do processador');
 
 INSERT INTO checklist_items (checklist_id, description)
 SELECT c.id, 'Rodar antivírus completo'
 FROM checklists c WHERE c.name = 'Manutenção preventiva de computadores'
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (SELECT 1 FROM checklist_items WHERE checklist_id = c.id AND description = 'Rodar antivírus completo');
 
 -- =========================================
 -- Respostas de checklist em uma OS
